@@ -1,0 +1,75 @@
+import vendedores.*
+import centros.*
+import clientes.*
+
+describe "ve" {
+	
+	const provincia1 = new Provincia(poblacion=5000)
+	const provincia2 = new Provincia(poblacion=11000000)
+	const ciudad1 = new Ciudad(provincia=provincia1)
+	const ciudad2 = new Ciudad(provincia=provincia2)
+	
+	const certificadoP1 = new Certificacion(sobreProducto=true, puntaje=10)
+	const certificadoP2 = new Certificacion(sobreProducto=true, puntaje=20)
+	const certificadoP3 = new Certificacion(sobreProducto=true, puntaje=30)
+	const certificadoG1 = new Certificacion(sobreProducto=false, puntaje=5)
+	
+	const fijo1 = new Fijo(viveEn=ciudad1)
+	const viajante1 = new Viajante(provHabilitadas=[provincia1],
+			certificaciones=[certificadoP1, certificadoP2, certificadoG1])
+	const comercio1 = new Comercio(sucursales=[ciudad2],
+			certificaciones=[certificadoP1,certificadoP2,certificadoP3,certificadoG1])
+		
+	const centro1 = new Centro(ciudad=ciudad1)
+	const centro2 = new Centro(ciudad=ciudad2)
+	
+	const inseguro1 = new Inseguro()
+	const detallista1 = new Detallista()
+	const humanista1 = new Humanista()
+
+	
+
+	test "vendedor fijo" {
+	
+		fijo1.certificar(certificadoP1)
+		fijo1.certificar(certificadoG1)
+		assert.equals(15, fijo1.puntos())
+		assert.notThat(fijo1.esVersatil())
+		assert.equals(1, fijo1.certProducto())
+		assert.that(fijo1.tieneAfinidad(centro1))
+		assert.notThat(fijo1.esCandidato(centro1))
+		assert.notThat(fijo1.esFirme())
+		assert.that(humanista1.puedeSerAtendidoPor(fijo1))
+	}
+	
+	test "vendedor viajante" {
+		assert.that(viajante1.esVersatil())
+		assert.that(viajante1.tieneAfinidad(centro1))
+		assert.notThat(viajante1.esInfluyente())
+		assert.that(inseguro1.puedeSerAtendidoPor(viajante1))
+	}
+	
+	test "comercio" {
+		assert.that(comercio1.tieneAfinidad(centro2))
+		assert.notThat(comercio1.esInfluyente())
+		assert.that(detallista1.puedeSerAtendidoPor(comercio1))
+		assert.that(inseguro1.puedeSerAtendidoPor(comercio1))
+		assert.notThat(humanista1.puedeSerAtendidoPor(comercio1))
+	}
+	
+	test "centro" {
+		centro2.agregarVendedor(fijo1)
+//		centro2.agregarVendedor(fijo1)
+		centro2.agregarVendedor(viajante1)
+		assert.equals(viajante1, centro2.vendedorEstrella())
+		assert.that(centro2.puedeCubrir(ciudad1))
+		assert.equals([viajante1], centro2.vendedoresGenericos())
+		assert.notThat(centro2.esRobusto())
+		assert.equals(35, viajante1.puntos())
+		
+		centro2.repartir(certificadoP3)
+		assert.equals(65, viajante1.puntos())
+	}
+	
+	
+}
